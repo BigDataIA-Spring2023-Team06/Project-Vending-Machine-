@@ -2,9 +2,14 @@ import os
 import openai
 import re
 import shutil
+from fastapi import FastAPI, Request
 
+# Set the OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+app = FastAPI()
+
+@app.post("/project_suggestions/")
 def project_suggestions(tools):
     query = f"give me detailed suggestions of 5 data engineering projects using {tools}"
 
@@ -29,8 +34,9 @@ def project_suggestions(tools):
     res1 = [i[1:] if i[0] == '.' else i for i in res1]
     #Remove any empty elements from the list
     res1 = [i for i in res1 if i != '']
-    return res1, gpt_response
+    return {"gpt_response": gpt_response, "project_suggestions": res1}
 
+@app.post("/get_project_structure_code/")
 def get_project_structure_code(selected_project: str,full_response: str):
     #Convert res1 list to a string
     completion = openai.ChatCompletion.create(
@@ -47,10 +53,9 @@ def get_project_structure_code(selected_project: str,full_response: str):
     code = re.search(pattern, res2, re.DOTALL).group(1)
     if "python" in code:
         code = code.replace("python", " ")
+    return {"code": code}
 
-    return code
-
-
+@app.post("/generate_file_dictionary/")
 def generate_file_dictionary(code):
     #create a temp directory to store the .py file
     os.makedirs("temp", exist_ok=True)
@@ -72,4 +77,4 @@ def generate_file_dictionary(code):
     os.chdir("..")
     #Delete the temp directory
     shutil.rmtree("temp")
-    return output_dict
+    return {"file_dictionary": output_dict}
