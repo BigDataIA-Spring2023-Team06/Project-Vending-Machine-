@@ -1,2 +1,4 @@
 backend/test-func.py
 backend/.enc
+backend/.env
+venv/

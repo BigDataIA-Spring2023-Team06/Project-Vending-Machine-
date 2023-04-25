@@ -6,9 +6,10 @@ import openai
 import nbformat
 from nbformat.v4 import new_notebook, new_code_cell
 
-
-openai.api_key = "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"
-g = Github("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")
+open_ai_key = os.getenv("OPENAI_API_KEY")
+github_key = os.getenv("GITHUB_API_KEY")
+openai.api_key = open_ai_key
+g = Github(github_key)
 user_git = g.get_user()
 
 
