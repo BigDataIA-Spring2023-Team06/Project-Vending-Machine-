@@ -7,6 +7,18 @@ import uuid
 from github import Github, GithubException
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import HTMLResponse
+from pymongo import MongoClient
+import pymongo
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from helper_functions import cw_logs
+import snowflake.connector
+from snowflake.connector import DictCursor, ProgrammingError
+from fastapi.requests import Request
+from typing import Optional
 
 
 # # Set the OpenAI API key
@@ -77,13 +89,13 @@ def get_project_suggestions(tools: str):
 
 #Function to create the project for the selected project suggestion
 @app.post("/create_project/")
-def create_project(selected_project,gpt_reponse,tools):
+def create_project(selected_project,gpt_response,tools):
     # Create a temporary directory to store the file structure
     temp_dir = f"temp_{uuid.uuid4().hex}"
     os.makedirs(temp_dir, exist_ok=True)
 
     # Get the code to create the file structure
-    code = get_project_structure_code(selected_project,gpt_reponse,tools)
+    code = get_project_structure_code(selected_project,gpt_response,tools)
     
     try:
         # Write the code to a Python file in the temporary directory
@@ -103,7 +115,7 @@ def create_project(selected_project,gpt_reponse,tools):
                 output_dict[root[2:]] = files
         #if output_dict is empty, run generate_project_structure_code function again and and do it until output_dict is not empty
         while output_dict == {}:
-            code = get_project_structure_code(selected_project,gpt_reponse,tools)
+            code = get_project_structure_code(selected_project,gpt_response,tools)
             with open(f"{temp_dir}/file_structure.py", "w") as f:
                 f.write(code)
             os.chdir(temp_dir)
@@ -120,7 +132,7 @@ def create_project(selected_project,gpt_reponse,tools):
                     model="gpt-3.5-turbo", 
                     messages = [{"role": "system", "content" : "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: 2023-03-02"},
                 {"role": "user", "content" : f"give me suggestions of 5 data engineering projects using {tools}"},
-                {"role": "assistant", "content" : gpt_reponse},
+                {"role": "assistant", "content" : gpt_response},
                 {"role": "user", "content" : f"give me python code to create the file structure and empty files in each folder for this project:{selected_project}"},
                 {"role": "assistant", "content" : code},
                 {"role": "user", "content" : f"give me python code for each file: {file} in the folder: {key}"}]
