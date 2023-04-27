@@ -77,7 +77,7 @@ def get_project_suggestions(tools: str):
 
 #Function to create the project for the selected project suggestion
 @app.post("/create_project/")
-def create_project(selected_project: str,gpt_reponse: str,tools: str):
+def create_project(selected_project,gpt_reponse,tools):
     # Create a temporary directory to store the file structure
     temp_dir = f"temp_{uuid.uuid4().hex}"
     os.makedirs(temp_dir, exist_ok=True)
