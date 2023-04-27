@@ -1,5 +1,8 @@
 import streamlit as st
 import requests
+import helper
+
+api_host = helper.get_api_host()
 
 
 # Set page configuration
@@ -11,17 +14,16 @@ st.set_page_config(
 
 def create_project(selected_project, gpt_response, tools):
     """Create a new project based on user input."""
-    url = "http://localhost:8000/create_project/"
+    url = f"http://{api_host}/create_project/"
     data = {"selected_project": selected_project, "gpt_response": gpt_response, "tools": tools}
     response = requests.post(url, params=data).json()
     return response
 
 def get_project_suggestions(tools):
-    url = "http://localhost:8000/get_project_suggestions/"
+    url = f"http://{api_host}/get_project_suggestions/"
     #Show the loading message
     # with st.spinner("Generating project suggestions..."):
     response = requests.post(url, params={"tools": tools}).json()
-    
     # Get the list of projects and the GPT response
     list_of_projects = response.get("list_of_projects", [])
     gpt_response = response.get("gpt_response", "")
@@ -66,4 +68,9 @@ def main():
 
 # Run the app
 if __name__ == "__main__":
-    main()
+    
+    if "access_token" in st.session_state: 
+        main()
+    else:
+        st.error("Please Login First")
+

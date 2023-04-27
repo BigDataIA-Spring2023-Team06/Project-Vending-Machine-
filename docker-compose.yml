@@ -1,0 +1,13 @@
+version: "3"
+services:
+  api:
+    container_name: backfastapi
+    build: backend
+    ports: 
+      - "8000:8000"
+
+  app:
+    container_name: streamlit
+    build: frontend
+    ports:
+      - "8081:8080"
