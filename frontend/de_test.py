@@ -1,61 +1,86 @@
 import streamlit as st
 import requests
+from streamlit import session_state
 
+# Define SessionState class
+class SessionState:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
-# Streamlit app to suggest data engineering projects based on the user's input
+# Set page configuration
 st.set_page_config(
     page_title="Data Engineering Project Generator",
     page_icon=":gear:",
     layout="wide"
 )
-css = '''
-<style>
-    [data-testid="stSidebar"]{
-        min-width: 400px;
-        max-width: 800px;
-    }
-</style>
-'''
-st.markdown(css, unsafe_allow_html=True)
-st.title("Data Engineering Project Generator")
 
-# Set the width of the sidebar
-
-
-# Helper functions
+# Define functions
 def get_project_suggestions(tools):
+    """Get project suggestions based on user input."""
     url = "http://localhost:8000/get_project_suggestions/"
-    payload = {"tools": tools}
-    response = requests.post(url, params=payload)
-    response = response.json()
-    list_of_projects = response.get("list_of_projects", [])
-    gpt_response = response.get("gpt_response", "")
-    return list_of_projects, gpt_response
+    #Show the loading message
+    with st.spinner("Generating project suggestions..."):
+        response = requests.post(url, params={"tools": tools}).json()
+        return response.get("list_of_projects", []), response.get("gpt_response", "")
 
 def create_project(selected_project, gpt_response, tools):
+    """Create a new project based on user input."""
     url = "http://localhost:8000/create_project/"
-    payload = {"selected_project": selected_project, "gpt_response": gpt_response, "tools": tools}
-    response = requests.post(url, params=payload)
-    response = response.json()
-    return response
+    response = requests.post(url, params={"selected_project": selected_project, "gpt_response": gpt_response, "tools": tools}).json()
+    return response.get("url", "")
 
-# UI layout
-st.sidebar.subheader("Enter the tools you want to use separated by commas:")
-tools = st.sidebar.text_input("", "")
-if not tools:
-    st.sidebar.warning("Please enter at least one tool.")
+def create_buttons(list_of_projects):
+    """Show project selection interface and call create_project function."""
+    counter = 0
+    buttons =[]
+    for project in list_of_projects:
+        buttons.append(st.button(project, key={f"Project-{counter}"}))
+        counter += 1
+    return buttons
 
-if st.sidebar.button("Get Project Suggestions"):
-    list_of_projects, gpt_response = get_project_suggestions(tools)
-    if not list_of_projects:
-        st.warning("No project suggestions found with the given tools.")
+def get_git_url(buttons,gpt_response,tools):
+    for i,button in enumerate(buttons):
+        if button:
+            with st.spinner("Creating project..."):
+                url = create_project(buttons, gpt_response, tools)
+                st.success(f"Github URL: {url}")
+
+
+def get_tools():
+    """Get user input for tools to use."""
+    tools = st.text_input("What tools do you want to use? (separate by commas)")
+    if not tools:
+        st.warning("Please enter some tools.")
     else:
-        st.write("Here are some project suggestions:")
-        selected_project = st.selectbox("Select the project you want to create", list_of_projects, key="project_selector")
-        if st.button("Create Project"):
-            response = create_project(selected_project, gpt_response, tools)
-            st.success("Project created successfully!")
-            st.write(f"Project Name: {response.get('project_name')}")
-            st.write(f"Project Description: {response.get('project_description')}")
-            st.write(f"Tools Used: {response.get('tools')}")
+        return tools.strip()
 
+# # Define main function
+# def main():
+#     # Get tools from user input
+#     tools = get_tools()
+#     if not tools:
+#         return
+
+#     list_of_projects, gpt_response = get_project_suggestions(tools)
+#     buttons = create_buttons(list_of_projects)
+
+#     for i, button in enumerate(buttons):
+#         if button:
+#             with st.spinner("Creating project..."):
+#                 url = create_project(buttons[i], gpt_response, tools)
+#             st.success(f"Github URL: {url}")
+#             break
+
+# Run the app
+if __name__ == "__main__":
+    tools = get_tools()
+    if not tools:
+        st.stop()
+    list_of_projects, gpt_response = get_project_suggestions(tools)
+    for i in (create_buttons(list_of_projects)):
+        if i:
+            get_git_url(list_of_projects,gpt_response,tools)
+            break
+    
+    
+    

@@ -20,7 +20,7 @@ def get_project_structure_code(selected_project: str,full_response: str,tools: s
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo", 
         messages = [{"role": "system", "content" : "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: 2023-03-02"},
-    {"role": "user", "content" : f"give me suggestions of data engineering projects using {tools}"},
+    {"role": "user", "content" : f"give me suggestions of 5 data engineering projects using {tools}"},
     {"role": "assistant", "content" : full_response},
     {"role": "user", "content" : f"give me python code to create the file structure and empty files in each folder for this project and I should be able to run the code without any changes:{selected_project}"}]
     )
@@ -33,16 +33,7 @@ def get_project_structure_code(selected_project: str,full_response: str,tools: s
         code = code.replace("python", " ")
     return code
 
-#API to test the connection with a test input and output
-@app.get("/test/")
-def test(name):
-    return {"name":f"Hello {name}"}
-
-# Define the function to get the project suggestions
-@app.post("/get_project_suggestions/")
-def get_project_suggestions(tools: str):
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    GITHUB_ACCESS_TOKEN = os.getenv("GITHUB_ACCESS_TOKEN")
+def project_suggestions(tools):
     query = f"give me detailed suggestions of 5 data engineering projects using {tools}"
 
     response =  openai.ChatCompletion.create(
@@ -66,6 +57,21 @@ def get_project_suggestions(tools: str):
     res1 = [i[1:] if i[0] == '.' else i for i in res1]
     #Remove any empty elements from the list
     res1 = [i for i in res1 if i != '']
+    return res1,gpt_response
+#API to test the connection with a test input and output
+@app.get("/test/")
+def test(name):
+    return {"name":f"Hello {name}"}
+
+# Define the function to get the project suggestions
+@app.post("/get_project_suggestions/")
+def get_project_suggestions(tools: str):
+    #Generate the project suggestions and check if res1 has a length less than or equal to 1
+    res1,gpt_response = project_suggestions(tools)
+    while len(res1) <= 1:
+        res1,gpt_response = project_suggestions(tools)
+
+    #Return the list of projects and the gpt_response
     return {"list_of_projects":res1,"gpt_response":gpt_response}
 
 
@@ -113,7 +119,7 @@ def create_project(selected_project: str,gpt_reponse: str,tools: str):
                     code_base = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo", 
                     messages = [{"role": "system", "content" : "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: 2023-03-02"},
-                {"role": "user", "content" : f"give me suggestions of data engineering projects using {tools}"},
+                {"role": "user", "content" : f"give me suggestions of 5 data engineering projects using {tools}"},
                 {"role": "assistant", "content" : gpt_reponse},
                 {"role": "user", "content" : f"give me python code to create the file structure and empty files in each folder for this project:{selected_project}"},
                 {"role": "assistant", "content" : code},
