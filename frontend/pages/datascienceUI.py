@@ -28,4 +28,7 @@ def main():
         st.write(output_link)
 
 if __name__ == "__main__":
-    main()
+    if "access_token" in st.session_state: 
+        main()
+    else:
+        st.error("Please Login First")

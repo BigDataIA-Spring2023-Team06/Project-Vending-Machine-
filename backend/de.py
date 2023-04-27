@@ -14,11 +14,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from helper_functions import cw_logs
+from helper_functions import login
 import snowflake.connector
 from snowflake.connector import DictCursor, ProgrammingError
 from fastapi.requests import Request
 from typing import Optional
+from datetime import datetime, timedelta
 
 
 # # Set the OpenAI API key
@@ -26,6 +27,184 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 GITHUB_ACCESS_TOKEN = os.getenv("GITHUB_ACCESS_TOKEN")
 
 app = FastAPI()
+
+####################Login and User APIs############################
+
+app = FastAPI()
+# to get a string like this run:
+# openssl rand -hex 32
+SECRET_KEY = "b6033f6c2ecf769b8f9dc310302c6f3401e82e657cab28759b34937c469f98e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: str 
+
+
+class User(BaseModel):
+    USERNAME: str
+    FULL_NAME: str 
+    TIER:str
+    HASHED_PASSWORD:str
+    DISABLED: bool 
+
+class UserInDB(User):
+    HASHED_PASSWORD: str
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+app = FastAPI()
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+
+def get_user(db, username: str):
+    if username in db:
+        user_dict = db[username]
+        return UserInDB(**user_dict)
+
+
+def authenticate_user(username: str, password: str):
+    user_db = login.get_users()
+    user = get_user(user_db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.HASHED_PASSWORD):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: timedelta):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user_db = login.get_users()
+    user = get_user(user_db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
+    if current_user.DISABLED:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.USERNAME}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.get("/users/me/", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user
+
+
+@app.get("/users/me/items/")
+async def read_own_items(current_user: User = Depends(get_current_active_user)):
+    return [{"item_id": "Foo", "owner": current_user.username}]
+###########################################################################################
+async def get_user_info(user: User):
+    return {"username": user.USERNAME, "tier": user.TIER, "hashed_password": user.HASHED_PASSWORD}
+
+async def get_user_password(user: User):
+            return {"username": user.USERNAME, "hashed_password": user.HASHED_PASSWORD}
+
+###########################################################################################
+#API for Creating a new user 
+@app.post("/create_user/")
+async def create_user(user: User):
+    #Check if the user already exists
+    check_user = login.check_user_exists(user.USERNAME)
+    if check_user == True:
+        return {"status": False,"Response": "Already Exists"}
+    else:
+        login.create_user(full_name = user.FULL_NAME, username = user.USERNAME, hashed_password = pwd_context.hash(user.HASHED_PASSWORD), tier = user.TIER)
+        return {"status": True, "Response":"User created successfully!"}
+
+
+#API for Deleting a user
+@app.post("/delete_user/")
+async def delete_user(user: User):
+    #Check if the user exists
+    if login.check_user_exists(user):
+        return login.delete_user(user)
+    else:
+        return {"status":"User does not exists"}
+
+#API for Updating a user
+@app.post("/update_user/")
+async def update_user(old_password: str, new_password: str,current_user: User = Depends(get_current_active_user)):
+    user_details = await get_user_info(current_user)
+    new_password_hash = pwd_context.hash(new_password)
+    if new_password == old_password:
+        return {"status":False, "response": "New password and old password can't be same"}
+    else:
+        if verify_password(old_password, user_details["hashed_password"]):
+            response = login.update_user_password(new_password_hash,current_user.USERNAME)
+            if response:
+                return {"status":True, "response": "Password updated successfully"}    
+        else:
+                return {"status":False, "response": "Old password doesn't match"}
+
+#API for getting the list of users
+@app.get("/get_users/")
+async def get_users(current_user: User = Depends(get_current_active_user)):
+    return login.get_users()
+
+
+
+################Application Feature APIs ###############################
+
 
 def get_project_structure_code(selected_project: str,full_response: str,tools: str):
     #Convert res1 list to a string
@@ -77,7 +256,7 @@ def test(name):
 
 # Define the function to get the project suggestions
 @app.post("/get_project_suggestions/")
-def get_project_suggestions(tools: str):
+def get_project_suggestions(tools: str, current_user: User = Depends(get_current_active_user)):
     #Generate the project suggestions and check if res1 has a length less than or equal to 1
     res1,gpt_response = project_suggestions(tools)
     while len(res1) <= 1:
@@ -89,7 +268,7 @@ def get_project_suggestions(tools: str):
 
 #Function to create the project for the selected project suggestion
 @app.post("/create_project/")
-def create_project(selected_project,gpt_response,tools):
+def create_project(selected_project,gpt_response,tools, current_user: User = Depends(get_current_active_user)):
     # Create a temporary directory to store the file structure
     temp_dir = f"temp_{uuid.uuid4().hex}"
     os.makedirs(temp_dir, exist_ok=True)
