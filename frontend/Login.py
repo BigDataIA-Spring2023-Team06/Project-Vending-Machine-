@@ -60,12 +60,11 @@ def app():
         new_username = st.text_input("New username", key="new_username_input")
         new_name = st.text_input("Full Name", key="new_name_input")
         new_password = st.text_input("New password", type="password", key="new_password_input")
-        service_plan = st.selectbox("Choose a service plan", ["Free", "Gold", "Platinum"])
         if st.button("Register"):
             payload = {
                         "USERNAME": new_username,
                         "FULL_NAME": new_name,
-                        "TIER": service_plan,
+                        "TIER": 1,
                         "HASHED_PASSWORD": new_password,
                         "DISABLED": False
                     }
@@ -83,20 +82,20 @@ def app():
             else:
                 st.error("This username is already taken")
 
-    # Add a change password form
-    change_password_option = st.selectbox("Change password?", ["Select an option", "Change password"])
-    if change_password_option == "Change password":
+    # # Add a change password form
+    # change_password_option = st.selectbox("Change password?", ["Select an option", "Change password"])
+    # if change_password_option == "Change password":
 
-        ch_old_password = st.text_input("Old password", type="password", key="old_pw_change_password")
-        ch_new_password = st.text_input("New password", type="password", key="new_pw_change_password")
-    if st.button("Change password"):
-        header={"Authorization": f"Bearer {st.session_state['access_token']}"}
-        response = requests.post(f"{host_url_api}/update_user/?old_password={ch_old_password}&new_password={ch_new_password}", headers=header)
-        response = response.json()
-        if response['status'] == True:
-            st.success("Password changed successfully")
-        else:
-            st.error("Passwords don't match")
+    #     ch_old_password = st.text_input("Old password", type="password", key="old_pw_change_password")
+    #     ch_new_password = st.text_input("New password", type="password", key="new_pw_change_password")
+    # if st.button("Change password"):
+    #     header={"Authorization": f"Bearer {st.session_state['access_token']}"}
+    #     response = requests.post(f"{host_url_api}/update_user/?old_password={ch_old_password}&new_password={ch_new_password}", headers=header)
+    #     response = response.json()
+    #     if response['status'] == True:
+    #         st.success("Password changed successfully")
+    #     else:
+    #         st.error("Passwords don't match")
 
 
 

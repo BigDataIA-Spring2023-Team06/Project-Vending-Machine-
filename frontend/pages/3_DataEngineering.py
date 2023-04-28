@@ -18,7 +18,7 @@ st.set_page_config(
     page_icon=":gear:",
     layout="wide"
 )
-access_token = st.session_state["access_token"]
+
 
 #Fetch project status from mongo db
 def fetch_project_status(project_id):
@@ -76,19 +76,22 @@ def get_tools():
     return tools.strip()
 
 def main():
-    st.title("Data Engineering Project Generator")
-    tools = get_tools()
-    
-    if not tools:
-        st.stop()
+    if st.session_state["access_token"] == "":
+        st.error("Please login to continue")
+    else:
+        st.title("Data Engineering Project Generator")
+        tools = get_tools()
+        
+        if not tools:
+            st.stop()
 
-    # Get the list of projects and the GPT response
-    get_project_suggestions(tools)
+        # Get the list of projects and the GPT response
+        get_project_suggestions(tools)
 
 
-    #Generate a unique project id
-    project_id = str(uuid.uuid4())
-    project_generator(tools,project_id)
+        #Generate a unique project id
+        project_id = str(uuid.uuid4())
+        project_generator(tools,project_id)
 
 
 # Run the app

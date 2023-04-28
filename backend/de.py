@@ -22,7 +22,7 @@ import requests
 import json
 from datetime import datetime
 import urllib.parse
-
+import codegen
 
 
 def gpt_init():
@@ -75,7 +75,7 @@ class UserInDB(User):
 def insert_into_mongodb(status):
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["status"]
@@ -86,7 +86,7 @@ def insert_into_mongodb(status):
 def insert_into_projects_link(project_id,project_link):
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["projects"]
@@ -97,7 +97,7 @@ def insert_into_projects_link(project_id,project_link):
 def insert_into_projects(project):
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["projects"]
@@ -173,6 +173,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if current_user.DISABLED:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -469,4 +470,44 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
         os.chdir("..")
         shutil.rmtree(temp_dir)
 
+#######Data Science
 
+@app.post("/create_repo/")
+async def create_repo(repo_name, description):
+    """
+    Creates a repository 
+    """
+    x = codegen.create_repo(repo_name, description)
+    return {"repo_link" : x[0], "repo_name" : x[1]}
+
+
+@app.post("/notebook/")
+async def push_notebook(link,columns, repo_name, message, filename):
+    """
+    Creates a notebook and pushes it to a repository
+    """
+    
+    nb = codegen.get_ipynb(link, columns)
+    codegen.push_notebook(repo_name, message, nb, filename)
+
+#Fetch Project History from MongoDB
+@app.get("/project_history/")
+async def fetch_project_history(current_user: User = Depends(get_current_active_user)):
+    """
+    Fetches project history from MongoDB
+    """
+    username = mongo_user
+    password = mongo_password
+    # uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
+    db = client["pvm"]
+    collection = db["projects"]
+    #Fetch all the projects for the user
+    projects = collection.find({"user":current_user.USERNAME})
+    #Convert the cursor to a list and then to a JSON serializable format
+    projects = [project for project in projects]
+    projects = json.loads(json.dumps(projects, default=str))
+    return projects
+    
+    
