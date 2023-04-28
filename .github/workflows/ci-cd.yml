@@ -59,4 +59,5 @@ jobs:
           sudo docker pull sneh3298/app:pvm-frontend
           sudo docker-compose build 
           sudo docker-compose --env-file secrets.env up
+          exit
           '
