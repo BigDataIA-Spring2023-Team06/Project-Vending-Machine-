@@ -7,11 +7,11 @@ import pandas as pd
 
 API_ENDPOINT = "https://app.explorium.ai/api/bundle/v1/enrich/company-ratings-by-employees"
 API_ENDPOINT1 = "https://app.explorium.ai/api/bundle/v1/enrich/technographics"
-
+explorium_key = os.getenv("EXPLORIUM_KEY")
 API_HEADERS = {
     "accept": "application/json",
     "content-type": "application/json",
-    "API_KEY": "2e7fa66d-22e5-4ff2-9f1a-3f6f73e55c5a"
+    "API_KEY": explorium_key
 }
 
 def get_company_ratings_by_employees(url):
@@ -127,7 +127,7 @@ def main():
             headers = {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "API_KEY": '2e7fa66d-22e5-4ff2-9f1a-3f6f73e55c5a'
+                "API_KEY": explorium_key
             }
             
             response = requests.post(API_ENDPOINT1, json=payload, headers=headers)
