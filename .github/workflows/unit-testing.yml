@@ -1,0 +1,43 @@
+name: CI-UnitTesting
+
+on:  
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.9.16
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9.16
+          
+      - name: Install Snowflake
+        working-directory: .
+        run: |
+          pip install snowflake-connector-python==2.6.0
+          
+      - name: Install passlib
+        working-directory: .
+        run: |
+          pip install passlib==1.7.4
+          
+      - name: Install python-multipart
+        working-directory: .
+        run: |
+          pip install python-multipart
+          
+      - name: Install Jose
+        working-directory: .
+        run: |
+          pip install python-jose==3.3.0
+          
+          
+      - name: Run tests
+        working-directory: .
+        run: |
+          pip install -r backend/requirements.txt
+          pytest -v backend/test_ut.py
