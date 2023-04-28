@@ -25,5 +25,5 @@ jobs:
         
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ec2-user@ec2-18-219-140-115.us-east-2.compute.amazonaws.com '
-          ls
+          pwd
           '
