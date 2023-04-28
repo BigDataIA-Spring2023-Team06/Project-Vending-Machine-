@@ -15,13 +15,16 @@ API_HEADERS = {
 }
 
 def get_company_ratings_by_employees(url):
-    payload = [{"domain": url}]
-    response = requests.post(API_ENDPOINT, json=payload, headers=API_HEADERS)
-    data = response.json()[0]
-    # Parse the trend string into a dictionary
-    data['Trend'] = json.loads(data['Trend'])
-    return data
-
+    
+    try:
+        payload = [{"domain": url}]
+        response = requests.post(API_ENDPOINT, json=payload, headers=API_HEADERS)
+        data = response.json()[0]
+        # Parse the trend string into a dictionary
+        data['Trend'] = json.loads(data['Trend'])
+        return data
+    except:
+        return "Please Enter Valid URL"
 
 def create_plots(ratings):
     # Overall Rating Bar Chart
