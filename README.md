@@ -4,6 +4,7 @@
 [API Link](http://18.219.140.115:8000/docs) <br>
 [Code Labs](https://codelabs-preview.appspot.com/?file_id=1o8MDDTwOHbqMEI7V0mA9TQ2dELlGQYqSJbtKeRW_Dek/edit#0) <br>
 [User Manual](https://codelabs-preview.appspot.com/?file_id=1o8MDDTwOHbqMEI7V0mA9TQ2dELlGQYqSJbtKeRW_Dek/edit#0) <br>
+[Demo Video](https://youtu.be/cicxeubgKac)
 
 ##### The primary objective of the Project Vending Machine is to simplify the process of creating a Github portfolio for job seekers. By automating the initial setup and configuration of data science and data engineering projects, the platform aims to reduce the time and effort required to create a portfolio. Additionally, the platform aims to help users identify the right skills to include in their portfolio by suggesting relevant projects based on their requirements and preferences. By achieving these objectives, the platform can help users to showcase their skills and experience more effectively, improving their chances of getting their desired job role.
 
