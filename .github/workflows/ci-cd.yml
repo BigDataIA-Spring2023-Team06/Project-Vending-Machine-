@@ -8,7 +8,37 @@ on:
     branches: [ "main" ] 
     
 
-jobs:      
+jobs:  
+  build:
+
+      runs-on: ubuntu-latest
+
+      steps:
+      - uses: actions/checkout@v3     
+
+      - name: login
+        run: docker login -u sneh3298 -p ${{ secrets.DOCKER_PASS }}
+
+      - name: Build the Docker image using compose
+        run: docker compose build 
+
+      - name: List Docker Images 
+        run: docker images
+
+      - name: Docker tag
+        run:  docker tag project-vending-machine--app:latest sneh3298/app:pvm-frontend
+
+      - name: Docker tag
+        run:  docker tag project-vending-machine--api:latest sneh3298/app:pvm-backend
+
+      - name: List Docker Images 
+        run: docker images
+
+      - name: Docker push 
+        run: docker push sneh3298/app:pvm-frontend
+
+      - name: Docker push 
+        run: docker push sneh3298/app:pvm-backend
   Deploy:
 #    needs: build
     runs-on: ubuntu-latest
@@ -25,5 +55,8 @@ jobs:
         
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ec2-user@ec2-18-219-140-115.us-east-2.compute.amazonaws.com '
-          pwd
+          sudo docker pull sneh3298/app:pvm-backend
+          sudo docker pull sneh3298/app:pvm-frontend
+          sudo docker-compose build 
+          sudo docker-compose --env-file secrets.env up
           '
