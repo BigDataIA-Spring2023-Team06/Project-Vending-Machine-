@@ -27,10 +27,10 @@ jobs:
       run: docker images
       
     - name: Docker tag
-      run:  docker tag project-vending-machine_app:latest sneh3298/app:pvm-frontend
+      run:  docker tag project-vending-machine--app:latest sneh3298/app:pvm-frontend
       
     - name: Docker tag
-      run:  docker tag project-vending-machine_api:latest sneh3298/app:pvm-backend
+      run:  docker tag project-vending-machine--api:latest sneh3298/app:pvm-backend
     
     - name: List Docker Images 
       run: docker images
