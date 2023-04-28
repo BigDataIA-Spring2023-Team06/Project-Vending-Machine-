@@ -155,8 +155,8 @@ def count_api_calls_left(username):
     
 
 # #Run all the functions
-if __name__ == "__main__":
-    print(check_user_exists("vikas"))
+# if __name__ == "__main__":
+    # print(check_user_exists("vikas"))
     # print(get_user_tier("midhun"))
     # print(count_api_calls("midhun","gold"))
 
@@ -179,6 +179,6 @@ if __name__ == "__main__":
 
 
 # print(get_password_hash("secret"))
-create_user("vikas", "vikas", 1, "$2b$12$o/w42FyTMySTPbsxDO7pm.D61XPTH4XA62xtDSmFJ44PYCKj2ZKBa")
+# create_user("vikas", "vikas", 1, "$2b$12$o/w42FyTMySTPbsxDO7pm.D61XPTH4XA62xtDSmFJ44PYCKj2ZKBa")
     
 

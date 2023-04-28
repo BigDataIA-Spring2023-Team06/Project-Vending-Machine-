@@ -490,4 +490,23 @@ async def push_notebook(link,columns, repo_name, message, filename):
     nb = codegen.get_ipynb(link, columns)
     codegen.push_notebook(repo_name, message, nb, filename)
 
-
+#Fetch Project History from MongoDB
+@app.get("/project_history/")
+async def fetch_project_history(current_user: User = Depends(get_current_active_user)):
+    """
+    Fetches project history from MongoDB
+    """
+    username = mongo_user
+    password = mongo_password
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
+    db = client["pvm"]
+    collection = db["projects"]
+    #Fetch all the projects for the user
+    projects = collection.find({"user":current_user.USERNAME})
+    #Convert the cursor to a list and then to a JSON serializable format
+    projects = [project for project in projects]
+    projects = json.loads(json.dumps(projects, default=str))
+    return projects
+    
+    
