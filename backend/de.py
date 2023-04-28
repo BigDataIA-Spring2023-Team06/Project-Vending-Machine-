@@ -400,7 +400,7 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
                 {"role": "assistant", "content" : gpt_response},
                 {"role": "user", "content" : f"give me python code to create the file structure and empty files in each folder for this project:{selected_project}"},
                 {"role": "assistant", "content" : code},
-                {"role": "user", "content" : f"give me comprehensive information based on the extension of each file: {file} in the folder: {key}"}]
+                {"role": "user", "content" : f"give me python code for each file: {file} in the folder: {key}"}]
                 )
                     generated_code = code_base["choices"][0]["message"]["content"]
 
