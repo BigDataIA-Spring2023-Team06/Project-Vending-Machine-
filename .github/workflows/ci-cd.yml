@@ -8,51 +8,19 @@ on:
     branches: [ "main" ] 
     
 
-jobs:
-
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3     
-    
-    - name: login
-      run: docker login -u sneh3298 -p ${{ secrets.DOCKER_PASS }}
-      
-    - name: Build the Docker image using compose
-      run: docker compose build 
-      
-    - name: List Docker Images 
-      run: docker images
-      
-    - name: Docker tag
-      run:  docker tag project-vending-machine--app:latest sneh3298/app:pvm-frontend
-      
-    - name: Docker tag
-      run:  docker tag project-vending-machine--api:latest sneh3298/app:pvm-backend
-    
-    - name: List Docker Images 
-      run: docker images
-      
-    - name: Docker push 
-      run: docker push sneh3298/app:pvm-frontend
-      
-    - name: Docker push 
-      run: docker push sneh3298/app:pvm-backend
-      
+jobs:      
   Deploy:
-    needs: build
+#    needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v2 
       - name: Deploy in EC2
         env:
-            PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY  }}
-            HOSTNAME : 18.219.140.115
-            USER_NAME : 18.219.140.115
-            
+          PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
+          HOSTNAME: 18.219.140.115
+          USER_NAME: 18.219.140.115
+
         run: |
           ssh -i "$PRIVATE_KEY" ec2-user@ec2-18-219-140-115.us-east-2.compute.amazonaws.com '
           ls
