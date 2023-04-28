@@ -34,7 +34,7 @@ def get_token(username, password):
 def app():
     api_host = helper.get_api_host()
     # Add a cover image
-    st.title('Project Vending Machine')
+    st.title('ProjectVendingMachine')
     st.header("Data as a Service")
     #st.image("images/cover.png", width=500)
 
