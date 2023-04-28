@@ -119,7 +119,7 @@ def main():
                 st.plotly_chart(fig3, use_container_width=True)
                 st.plotly_chart(fig4, use_container_width=True)
                 
-            except IndexError:
+            except:
                 st.error("The provided URL is not valid or has no rating data available.")
 
         if st.button("get technographics"):
