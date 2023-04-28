@@ -7,7 +7,6 @@ import uuid
 from github import Github, GithubException
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import HTMLResponse
-from pymongo import MongoClient
 import pymongo
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -15,7 +14,6 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from helper_functions import login
-import snowflake.connector
 from snowflake.connector import DictCursor, ProgrammingError
 from fastapi.requests import Request
 from typing import Optional
@@ -24,7 +22,6 @@ import requests
 import json
 from datetime import datetime
 import urllib.parse
-import bson
 
 
 
