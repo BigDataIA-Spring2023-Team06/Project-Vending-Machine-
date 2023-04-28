@@ -2,7 +2,8 @@ import streamlit as st
 import requests
 import helper
 
-
+#initilize token
+st.session_state["access_token"] = ""
 
 host_url_api = helper.get_api_host()
 

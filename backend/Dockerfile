@@ -7,7 +7,7 @@ RUN pip install --upgrade pip
 WORKDIR /app
 # Change working dir to app
 
-ADD  requirements.txt /app/
+ADD de.py requirements.txt /app/
 # Copy main.py and requirements.txt from local into app dir inside the container
 
 COPY . .
@@ -15,10 +15,10 @@ COPY . .
 
 RUN pip install -r requirements.txt
 # Refering to copied file inside the app dir install the user dependency
-# RUN pip install openpyxl
 
-EXPOSE 8080
+EXPOSE 8000
 # Expose a port inside the container on which services run
 
 #CMD ["gunicorn" ,"-w", "4", "-k", "uvicorn.workers.UvicornWorker" , "--bind", "0.0.0.0:8000", "fastapi_test:app"]
-CMD ["streamlit", "run", "Login.py","--server.port", "8080"]
+CMD ["uvicorn", "de:app","--host", "0.0.0.0", "--port", "8000"]
+# gunicorn command to run the service with 4 worker nodes binding localhost/0.0.0.0 on port 8000 refering app inside the main.py

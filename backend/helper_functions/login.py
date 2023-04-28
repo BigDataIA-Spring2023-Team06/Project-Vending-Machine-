@@ -1,17 +1,25 @@
 import snowflake.connector
 from snowflake.connector import DictCursor, ProgrammingError
-
+import os
 from fastapi import HTTPException
 
 
+#Snowflake credentials
+user = os.getenv('SNOWFLAKE_USER')
+password = os.getenv('SNOWFLAKE_PASSWORD')
+account = os.getenv('SNOWFLAKE_ACCOUNT')
+warehouse = os.getenv('SNOWFLAKE_WAREHOUSE')
+database = os.getenv('SNOWFLAKE_DATABASE')
+schema = os.getenv('SNOWFLAKE_SCHEMA')
+
 def snowflake_conn():
     conn = snowflake.connector.connect(
-        user='MIDHUNMOHAN',
-        password='@Team6finalride',
-        account='pyvsbfc-df81537',
-        warehouse='COMPUTE_WH',
-        database='PVM',
-        schema='PUBLIC'
+        user=user,
+        password=password,
+        account=account,
+        warehouse=warehouse,
+        database=database,
+        schema=schema
     )
     return conn
 #Function to Create User
