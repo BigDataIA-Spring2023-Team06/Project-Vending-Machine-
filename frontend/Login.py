@@ -9,8 +9,8 @@ host_url_api = helper.get_api_host()
 
 
 def add_to_session_state(new, value):
-        
         st.session_state[new] = value
+        
 # Define the Streamlit app
 def is_authorized(username, password):
     url_token = f"{host_url_api}/token"
