@@ -20,8 +20,11 @@ def get_company_ratings_by_employees(url):
     data = response.json()[0]
 
     # Parse the trend string into a dictionary
-    data['Trend'] = json.loads(data['Trend'])
-
+    
+    try:
+        data['Trend'] = json.loads(data['Trend'])
+    except:
+        print
     return data
   
 
@@ -110,7 +113,7 @@ def main():
             st.write(f"*Senior Management Rating:* {round(ratings['Senior management rating'], 1)}/5")
             st.write(f"*Compensation Benefits Rating:* {round(ratings['Compensation benefits rating'], 1)}/5")
             st.write(f"*Diversity Inclusion Rating:* {round(ratings['Diversity inclusion rating'], 1)}/5")
-            st.write(f"*CEO Approval Rating:* {round(ratings['CEO approval rating']*100, 1)}%")
+            #st.write(f"*CEO Approval Rating:* {round(ratings['CEO approval rating']*100, 1)}%")
             
             fig, fig2, fig3, fig4 = create_plots(ratings)
             st.plotly_chart(fig, use_container_width=True)
