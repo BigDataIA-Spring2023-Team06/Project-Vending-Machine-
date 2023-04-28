@@ -54,7 +54,6 @@ jobs:
             USER_NAME : 18.219.140.115
             
         run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key 18.219.140.115@18.219.140.115 '
+          ssh -i "$PRIVATE_KEY" ec2-user@ec2-18-219-140-115.us-east-2.compute.amazonaws.com '
           ls
           '
