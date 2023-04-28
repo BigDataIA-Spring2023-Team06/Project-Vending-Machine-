@@ -18,15 +18,10 @@ def get_company_ratings_by_employees(url):
     payload = [{"domain": url}]
     response = requests.post(API_ENDPOINT, json=payload, headers=API_HEADERS)
     data = response.json()[0]
-
     # Parse the trend string into a dictionary
-    
-    try:
-        data['Trend'] = json.loads(data['Trend'])
-    except:
-        print
+    data['Trend'] = json.loads(data['Trend'])
     return data
-  
+
 
 def create_plots(ratings):
     # Overall Rating Bar Chart
@@ -98,49 +93,56 @@ def create_plots(ratings):
     return fig, fig2, fig3, fig4
 
 def main():
-    st.set_page_config(page_title='Company Ratings', page_icon=':guardsman:', layout='wide')
-    st.title("Company Ratings by Employees")
-    st.write("Enter the company's website URL below to see ratings by employees.")
-    url = st.text_input("URL")
+    if st.session_state["access_token"] == "":
+        st.error("Please login to continue")
+    else:
+        st.set_page_config(page_title='Company Ratings', page_icon=':guardsman:', layout='wide')
+        st.title("Company Ratings by Employees")
+        st.write("Enter the company's website URL below to see ratings by employees.")
+        url = st.text_input("URL")
 
-    if url:
-        try:
-            ratings = get_company_ratings_by_employees(url)
-            st.write(f"*{ratings['Number of ratings']}* ratings | *{ratings['Total reviews count']}* reviews")
-            st.write(f"*Overall Rating:* {round(ratings['Overall Ratings '], 1)}/5")
-            st.write(f"*Work Life Balance Rating:* {round(ratings['Work life balance rating'], 1)}/5")
-            st.write(f"*Culture Values Rating:* {round(ratings['Culture values rating'], 1)}/5")
-            st.write(f"*Senior Management Rating:* {round(ratings['Senior management rating'], 1)}/5")
-            st.write(f"*Compensation Benefits Rating:* {round(ratings['Compensation benefits rating'], 1)}/5")
-            st.write(f"*Diversity Inclusion Rating:* {round(ratings['Diversity inclusion rating'], 1)}/5")
-            #st.write(f"*CEO Approval Rating:* {round(ratings['CEO approval rating']*100, 1)}%")
+        if url:
+            try:
+                ratings = get_company_ratings_by_employees(url)
+                st.write(f"**{ratings['Number of ratings']}** ratings | **{ratings['Total reviews count']}** reviews")
+                st.write(f"**Overall Rating:** {round(ratings['Overall Ratings '], 1)}/5")
+                st.write(f"**Work Life Balance Rating:** {round(ratings['Work life balance rating'], 1)}/5")
+                st.write(f"**Culture Values Rating:** {round(ratings['Culture values rating'], 1)}/5")
+                st.write(f"**Senior Management Rating:** {round(ratings['Senior management rating'], 1)}/5")
+                st.write(f"**Compensation Benefits Rating:** {round(ratings['Compensation benefits rating'], 1)}/5")
+                st.write(f"**Diversity Inclusion Rating:** {round(ratings['Diversity inclusion rating'], 1)}/5")
+                st.write(f"**CEO Approval Rating:** {round(ratings['CEO approval rating']*100, 1)}%")
+                
+                fig, fig2, fig3, fig4 = create_plots(ratings)
+                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig2, use_container_width=True)
+                st.plotly_chart(fig3, use_container_width=True)
+                st.plotly_chart(fig4, use_container_width=True)
+                
+            except:
+                st.error("The provided URL is not valid or has no rating data available.")
+
+        if st.button("get technographics"):
+            payload = [{"url": url}]
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "API_KEY": '2e7fa66d-22e5-4ff2-9f1a-3f6f73e55c5a'
+            }
             
-            fig, fig2, fig3, fig4 = create_plots(ratings)
-            st.plotly_chart(fig, use_container_width=True)
-            st.plotly_chart(fig2, use_container_width=True)
-            st.plotly_chart(fig3, use_container_width=True)
-            st.plotly_chart(fig4, use_container_width=True)
-            
-        except :
-            st.error("The provided URL is not valid or has no rating data available.")
+            response = requests.post(API_ENDPOINT1, json=payload, headers=headers)
 
-    if st.button("get technographics"):
-        payload = [{"url": url}]
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "API_KEY": '2e7fa66d-22e5-4ff2-9f1a-3f6f73e55c5a'
-        }
+            if response.ok:
+                data = response.json()[0]
+                st.write(f"Technographics enrichment for {data['INPUT_url']}:\n")
+                df = pd.DataFrame(data.items(), columns=["Key", "Value"])
+                st.dataframe(df.set_index("Key"))
+            else:
+                st.write("Error occurred while retrieving technographics data.")
 
-        response = requests.post(API_ENDPOINT1, json=payload, headers=headers)
+if __name__ == "__main__":
+    if "access_token" in st.session_state: 
+        main()
+    else:
+        st.error("Please Login First")
 
-        if response.ok:
-            data = response.json()[0]
-            st.write(f"Technographics enrichment for {data['INPUT_url']}:\n")
-            df = pd.DataFrame(data.items(), columns=["Key", "Value"])
-            st.dataframe(df.set_index("Key"))
-        else:
-            st.write("Error occurred while retrieving technographics data.")
-
-if _name_ == "_main_":
-    main()
