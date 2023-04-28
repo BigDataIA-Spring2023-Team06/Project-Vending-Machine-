@@ -47,5 +47,8 @@ def project_history():
     fetch_project_data()
 
 if __name__ == "__main__":
-    project_history()
+    if "access_token" in st.session_state:
+        project_history()
+    else:
+        st.error("Please Login First")
 
