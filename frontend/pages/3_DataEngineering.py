@@ -34,7 +34,10 @@ def create_project(selected_project, gpt_response, tools,project_id):
     url = f"{api_host}/create_project/"
     data = {"selected_project": selected_project, "gpt_response": gpt_response, "tools": tools, "project_id": project_id}
     response = requests.post(url, headers=headers,params=data).json()
-    return response.get("url", "")
+    if response["status_code"] == 200:
+        return response
+    else:
+        return "Something went wrong. Please try again later."
 
 def get_project_suggestions(tools):
     # Check if the results are already stored in session state
@@ -62,9 +65,12 @@ def project_generator(tools, project_id):
 
     # If a project is selected, create the project
     if selected_project and selected_project != "":
-        url = create_project(selected_project, gpt_response, tools, project_id)
-        st.success(f"Github URL: {url}")
-
+        response = create_project(selected_project, gpt_response, tools, project_id)
+        if response["status_code"] == 200:
+            url = response["detail"]
+            st.success(f"Github URL: {url}")
+        else:
+            st.error(response)
 
 def get_tools():
     """Get user input for tools to use."""

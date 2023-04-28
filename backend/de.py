@@ -319,6 +319,7 @@ def test(name):
 # Define the function to get the project suggestions
 @app.post("/get_project_suggestions/")
 def get_project_suggestions(tools: str, current_user: User = Depends(get_current_active_user)):
+    gpt_init()
     #Generate the project suggestions and check if res1 has a length less than or equal to 1
     res1,gpt_response = project_suggestions(tools)
     while len(res1) <= 1:
@@ -337,6 +338,9 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
     temp_dir = f"temp_{uuid.uuid4().hex}"
     os.makedirs(temp_dir, exist_ok=True)
 
+    #Add a readme file to the temporary directory
+    with open(f"{temp_dir}/README.md", "w") as f:
+        f.write(f"# {selected_project}")
 
     #Create a dictionary to store the project details
     project_details = {"project_id":project_id,"project_name":selected_project,"gpt_response":gpt_response,"project_tools":tools,"user":current_user.USERNAME,"created":datetime.now(),"project_status":"Generating Project Structure"}
@@ -370,14 +374,18 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
                 output_dict[root[2:]] = files
         #if output_dict is empty, run generate_project_structure_code function again and and do it until output_dict is not empty
         while output_dict == {}:
-            code = get_project_structure_code(selected_project,gpt_response,tools)
-            with open(f"{temp_dir}/file_structure.py", "w") as f:
-                f.write(code)
-            os.chdir(temp_dir)
-            os.system("python file_structure.py")
-            for root, dirs, files in os.walk("."):
-                if root != ".":
-                    output_dict[root[2:]] = files
+            try:
+                code = get_project_structure_code(selected_project,gpt_response,tools)
+                with open(f"{temp_dir}/file_structure.py", "w") as f:
+                    f.write(code)
+                os.chdir(temp_dir)
+                os.system("python file_structure.py")
+                #Except if there is an error in the code
+                for root, dirs, files in os.walk("."):
+                    if root != ".":
+                        output_dict[root[2:]] = files
+            except:
+                raise HTTPException(status_code=500, detail="We had an issue, please try again later")
 
         status={"project_id":project_id,"project_status":f"Fetching code for the following: {output_dict}", "created":datetime.now()}
         insert_into_mongodb(status)
@@ -392,7 +400,7 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
                 {"role": "assistant", "content" : gpt_response},
                 {"role": "user", "content" : f"give me python code to create the file structure and empty files in each folder for this project:{selected_project}"},
                 {"role": "assistant", "content" : code},
-                {"role": "user", "content" : f"give me python code for each file: {file} in the folder: {key}"}]
+                {"role": "user", "content" : f"give me comprehensive information based on the extension of each file: {file} in the folder: {key}"}]
                 )
                     generated_code = code_base["choices"][0]["message"]["content"]
 
@@ -414,26 +422,6 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
         status={"project_id":project_id,"project_status":"Code added to all files"}
         insert_into_mongodb(status)
 
-        # status = {"project_id":project_id,"project_status":"Generating README","created":datetime.now()}
-        # insert_into_mongodb(status)
-        # #Generate a readme file for the project
-        # readme = openai.ChatCompletion.create(
-        #             model="gpt-3.5-turbo", 
-        #             messages = [{"role": "system", "content" : "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: 2023-03-02"},
-        #         {"role": "user", "content" : f"give me suggestions of 5 data engineering projects using {tools}"},
-        #         {"role": "assistant", "content" : gpt_response},
-        #         {"role": "user", "content" : f"give me python code to create the file structure and empty files in each folder for this project:{selected_project}"},
-        #         {"role": "assistant", "content" : code},
-        #         {"role": "user", "content" : f"give me a readme to setup each file for the project: {selected_project} and further instructions for the project"}]
-        # )
-
-        # readme = readme["choices"][0]["message"]["content"]
-        # pattern = r"```(.+?)```"
-        # matches = re.findall(pattern, readme, re.DOTALL)
-        # #Create a readme.md file for the project and add to temp
-        # with open(f"{temp_dir}/readme.md", "w") as f:
-        #     f.write(readme)
-
         # Create a GitHub repository and upload the file structure
         status={"project_id":project_id,"project_status":"Creating GitHub repository", "created":datetime.now()}
         insert_into_mongodb(status)
@@ -452,7 +440,7 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
                     status={"project_id":project_id,"project_status":f"Pushing file {file_path} to GitHub repository", "created":datetime.now()}
                     insert_into_mongodb(status)
                 except GithubException as e:
-                    print(f"Error uploading file {file_path}: {e}")
+                    return {"status_code":404,"detail":f"Error uploading file {file_path}: {e}"}
 
         # remove file_structure.py
         os.remove("file_structure.py")
@@ -463,8 +451,9 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
         github_url = {"project_id":project_id,"github_url":f"{repo.html_url}"}
         insert_into_projects_link(project_id,github_url)
         # Return the GitHub repository URL
-        return {"url": f"{repo.html_url}"}
-
+        return {"status_code": 200,"detail": f"{repo.html_url}"}
+    except:
+        raise HTTPException(status_code=500, detail="We had an issue, please try again later")
     finally:
         # Clean up the temporary directory
         os.chdir("..")
