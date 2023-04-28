@@ -22,6 +22,7 @@ import requests
 import json
 from datetime import datetime
 import urllib.parse
+import codegen
 
 
 
@@ -468,5 +469,25 @@ def create_project(selected_project,gpt_response,tools,project_id, current_user:
         # Clean up the temporary directory
         os.chdir("..")
         shutil.rmtree(temp_dir)
+
+#######Data Science
+
+@app.post("/create_repo/")
+async def create_repo(repo_name, description):
+    """
+    Creates a repository 
+    """
+    x = codegen.create_repo(repo_name, description)
+    return {"repo_link" : x[0], "repo_name" : x[1]}
+
+
+@app.post("/notebook/")
+async def push_notebook(link,columns, repo_name, message, filename):
+    """
+    Creates a notebook and pushes it to a repository
+    """
+    
+    nb = codegen.get_ipynb(link, columns)
+    codegen.push_notebook(repo_name, message, nb, filename)
 
 
