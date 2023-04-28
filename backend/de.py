@@ -25,7 +25,6 @@ import urllib.parse
 import codegen
 
 
-
 def gpt_init():
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -76,7 +75,7 @@ class UserInDB(User):
 def insert_into_mongodb(status):
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["status"]
@@ -87,7 +86,7 @@ def insert_into_mongodb(status):
 def insert_into_projects_link(project_id,project_link):
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["projects"]
@@ -98,7 +97,7 @@ def insert_into_projects_link(project_id,project_link):
 def insert_into_projects(project):
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["projects"]
@@ -174,6 +173,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if current_user.DISABLED:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -498,7 +498,8 @@ async def fetch_project_history(current_user: User = Depends(get_current_active_
     """
     username = mongo_user
     password = mongo_password
-    uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    # uri = f"mongodb+srv://{urllib.parse.quote_plus(username)}:{urllib.parse.quote_plus(password)}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
+    uri = f"mongodb+srv://{urllib.parse.quote_plus(username.encode())}:{urllib.parse.quote_plus(password.encode())}@pvm.54wtzjn.mongodb.net/?retryWrites=true&w=majority"
     client = pymongo.MongoClient(uri, tlsAllowInvalidCertificates=True)
     db = client["pvm"]
     collection = db["projects"]

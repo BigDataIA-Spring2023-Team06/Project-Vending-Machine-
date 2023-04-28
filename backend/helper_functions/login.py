@@ -108,7 +108,6 @@ def get_user_tier(username):
 def count_api_calls(username,tier):
     conn = snowflake_conn()
     with conn.cursor(DictCursor) as cursor:
-
         query1 = f"SELECT COUNT(*) FROM API_CALLS WHERE USERNAME = '{username}' AND TIER = '{tier}' AND time >= DATEADD(HOUR, -1, CURRENT_TIMESTAMP());"
         cursor.execute(query1)
         api_calls_in_last_hour = cursor.fetchall()[0]
@@ -154,31 +153,7 @@ def count_api_calls_left(username):
         return api_calls_in_last_hour['COUNT(*)']
     
 
-# #Run all the functions
-# if __name__ == "__main__":
-    # print(check_user_exists("vikas"))
-    # print(get_user_tier("midhun"))
-    # print(count_api_calls("midhun","gold"))
 
-
-
-
-
-
-
-
-
-###############Test Code################
-
-
-# from passlib.context import CryptContext
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-# def get_password_hash(password):
-#     return pwd_context.hash(password)
-
-
-
-# print(get_password_hash("secret"))
-# create_user("vikas", "vikas", 1, "$2b$12$o/w42FyTMySTPbsxDO7pm.D61XPTH4XA62xtDSmFJ44PYCKj2ZKBa")
-    
+if __name__ == "__main__":
+    print(check_user_exists('aryan'))
 
