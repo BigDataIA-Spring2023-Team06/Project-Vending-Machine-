@@ -3,11 +3,9 @@ import requests
 import helper
 
 
-
 access_token = st.session_state["access_token"]
 headers = {"Authorization": f"Bearer {access_token}"}
 api_host = helper.get_api_host() 
-
 
 # Set page configuration
 st.set_page_config(
@@ -68,6 +66,7 @@ def main():
         st.stop()
     else:
         project_generator(list_of_projects, gpt_response, tools)
+
 
 
 # Run the app

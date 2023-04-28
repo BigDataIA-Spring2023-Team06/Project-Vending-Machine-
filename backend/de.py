@@ -20,6 +20,7 @@ from snowflake.connector import DictCursor, ProgrammingError
 from fastapi.requests import Request
 from typing import Optional
 from datetime import datetime, timedelta
+import codegen
 
 
 # # Set the OpenAI API key
@@ -205,7 +206,6 @@ async def get_users(current_user: User = Depends(get_current_active_user)):
 
 ################Application Feature APIs ###############################
 
-
 def get_project_structure_code(selected_project: str,full_response: str,tools: str):
     #Convert res1 list to a string
     completion = openai.ChatCompletion.create(
@@ -249,6 +249,29 @@ def project_suggestions(tools):
     #Remove any empty elements from the list
     res1 = [i for i in res1 if i != '']
     return res1,gpt_response
+
+#######Data Science
+
+@app.post("/create_repo/")
+async def create_repo(repo_name, description):
+    """
+    Creates a repository 
+    """
+    x = codegen.create_repo(repo_name, description)
+    return {"repo_link" : x[0], "repo_name" : x[1]}
+
+
+@app.post("/notebook/")
+async def push_notebook(link,columns, repo_name, message, filename):
+    """
+    Creates a notebook and pushes it to a repository
+    """
+    
+    nb = codegen.get_ipynb(link, columns)
+    codegen.push_notebook(repo_name, message, nb, filename)
+    
+
+######Data Engineering
 #API to test the connection with a test input and output
 @app.get("/test/")
 def test(name):
