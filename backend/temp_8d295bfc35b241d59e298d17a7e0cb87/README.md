@@ -1,0 +1,1 @@
+#  Real-time data processing: Use Amazon Kinesis to stream large amounts of data into Amazon S3. Then, use Airflow to schedule and automate ETL jobs that transform and analyze the data. Finally, use Streamlit to create interactive dashboards that visualize the processed data in real-time.

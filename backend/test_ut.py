@@ -2,7 +2,7 @@ import requests
 import uuid
 from nbformat.v4 import new_notebook, new_code_cell
 
-URL = "http://localhost:8000"
+URL = "http://18.219.140.115:8000" 
 
 data = {'username': "aryan", 'password': "secret"}
 response_token = requests.post(f'{URL}/token', data=data)   
